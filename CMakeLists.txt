@@ -32,7 +32,8 @@ add_executable(WeatherLab main.cpp
         ConfigInfo/ConfigInfo.cpp ConfigInfo/ConfigInfo.h
         API/API_Info.cpp API/API_Info.h
         Interface/Interface.cpp Interface/Interface.h
-        Utils/Utils.cpp Utils/Utils.h)
+        Utils/Utils.cpp Utils/Utils.h
+        Parser/Parser.cpp Parser/Parser.h)
 
 target_link_libraries(WeatherLab PUBLIC
         ftxui::screen

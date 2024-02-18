@@ -7,11 +7,12 @@
 
 class Interface{
 public:
-    Interface(ConfigInfo& config_data, API& api_data);
-    ftxui::Element DayForecast(ConvertedDaysData& converted_info, uint8_t day_idx);
+    Interface(const ImmutableParameters& immutable_parameters, MutableParameters& mutable_parameters, APIInfo& weather_data);
+    ftxui::Element DayForecast(DataConverter& converter, uint8_t day_idx);
     ftxui::Element MakeForecast();
     void OpenUI();
 private:
-    ConfigInfo& config_data;
-    API& api_data;
+    const ImmutableParameters& user_immutable_parameters;
+    MutableParameters& user_mutable_parameters;
+    APIInfo& weather_data;
 };

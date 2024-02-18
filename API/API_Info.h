@@ -1,16 +1,27 @@
 #pragma once
 
-#include <string>
-#include <nlohmann/json.hpp>
-#include <string_view>
+#include "../ConfigInfo/ConfigInfo.h"
 
-struct API {
-    API(const std::string& api_key);
-    std::pair<float, float> GetInfoFromAPINinja(const std::string& city);
+struct WeatherDataAboutSomeCity {
+    std::vector<std::string> forecast_days;
+    std::vector<float> temperature_2m_max;
+    std::vector<float> temperature_2m_min;
+    std::vector<float> wind_speed_10m_max;
+    std::vector<float> rain_sum;
+};
+
+struct LocationDataAboutSomeCity {
+    float latitude;
+    float longitude;
+};
+
+class APIInfo {
+public:
+    void GetInfoFromAPINinja(const ImmutableParameters& user_immutable_parameters, size_t city_idx);
     void GetInfoFromOpenMeteoAPI(float latitude, float longitude);
-    void GetAllForecasts(std::vector<std::string>& cities);
-
-    const std::string& api_key;
-    std::vector<nlohmann::json> weather_cache;
-    std::vector<std::pair<float, float>> coordinates_cache;
+    void GetAllForecasts(const ImmutableParameters& user_immutable_parameters);
+    std::vector<WeatherDataAboutSomeCity>& GetWeatherCache();
+private:
+    std::vector<WeatherDataAboutSomeCity> weather_cache;
+    std::vector<LocationDataAboutSomeCity> coordinates_cache;
 };

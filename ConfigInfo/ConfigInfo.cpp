@@ -1,56 +1,56 @@
 #include "ConfigInfo.h"
 #include <fstream>
-#include <iostream>
 #include <nlohmann/json.hpp>
-#include <cpr/cpr.h>
 using json = nlohmann::json;
 
-void ConfigInfo::IncreaseForecastDays() {
+MutableParameters::MutableParameters(size_t city_idx, uint8_t forecast_days): city_idx(city_idx), forecast_days(forecast_days) {}
+
+void MutableParameters::IncreaseForecastDays() {
     if (forecast_days < 16) {
         ++forecast_days;
     }
 }
 
-void ConfigInfo::DecreaseForecastDays() {
+void MutableParameters::DecreaseForecastDays() {
     if (forecast_days > 0) {
         --forecast_days;
     }
 }
 
-void ConfigInfo::IncreaseCityIdx() {
-    if (city_idx + 1 < cities.size()) {
+void MutableParameters::IncreaseCityIdx(const ImmutableParameters& user_immutable_parameters) {
+    if (city_idx + 1 < user_immutable_parameters.GetCities().size()) {
         ++city_idx;
     }
 }
 
-void ConfigInfo::DecreaseCityIdx() {
+void MutableParameters::DecreaseCityIdx() {
     if (city_idx > 0) {
         --city_idx;
     }
 }
 
-bool ConfigInfo::UnpackInfoFromUserJson() {
-    std::ifstream file("..\\config.json");
-    if (!file.is_open()) {
-        std::cerr << "Either config.json isn't exist or you have remove config.json into another directory";
-        return false;
-    }
-    json info = json::parse(file);
-    cities = info["cities"];
-    frequency = info["frequency"];
-    forecast_days = info["forecast days"];
-    api_key = info["API-Key"];
-    if (cities.empty() || frequency == 0 || forecast_days == 0 || forecast_days > 16) {
-        std::cerr << "Wrong input data, read the documentation to learn more about input requirements";
-        return false;
-    }
+size_t MutableParameters::GetCityIdx() const{
+    return city_idx;
+}
 
-    cpr::Response r = cpr::Get(cpr::Url("https://api.api-ninjas.com/v1/city"),
-                               cpr::Header{{"X-Api-Key", api_key}});
-    json check_the_correctness_of_api_key = json::parse(r.text);
-    if (check_the_correctness_of_api_key.contains("error") && check_the_correctness_of_api_key["error"] == "Invalid API Key.") {
-        std::cerr << "Your API-Key is incorrect";
-        return false;
-    }
-    return true;
+uint8_t MutableParameters::GetForecastDays() const{
+    return forecast_days;
+}
+
+ImmutableParameters::ImmutableParameters(const std::vector<std::string>& cities, const size_t frequency, const std::string& api_key): cities(cities), frequency(frequency), api_key(api_key) {}
+
+const std::vector<std::string>& ImmutableParameters::GetCities() const {
+    return cities;
+}
+
+const std::string& ImmutableParameters::GetCityOnSomeIdx(size_t idx) const {
+    return cities[idx];
+}
+
+const size_t ImmutableParameters::GetFrequency() const {
+    return frequency;
+}
+
+const std::string& ImmutableParameters::GetAPIKey() const {
+    return api_key;
 }

@@ -1,18 +1,21 @@
 #pragma once
 
+#include "../API/API_Info.h"
+#include "../ConfigInfo/ConfigInfo.h"
 #include <cstdint>
 #include <sstream>
-#include <nlohmann/json.hpp>
 
-struct ConvertedDaysData {
-    ConvertedDaysData(nlohmann::json& api_data);
-    void ConvertFloatsToStreams(uint8_t day_idx);
-    void clear();
+struct ConvertedData {
+    std::string max_temp;
+    std::string min_temp;
+    std::string wind_speed;
+    std::string rain_sum;
+};
 
-    nlohmann::json& days_data;
-
-    std::ostringstream stream_for_min_temp;
-    std::ostringstream stream_for_max_temp;
-    std::ostringstream stream_for_rain_sum;
-    std::ostringstream stream_for_wind_speed;
+class DataConverter {
+public:
+    DataConverter(WeatherDataAboutSomeCity& data);
+    ConvertedData ConvertFloatsToStreams(uint8_t day_idx);
+private:
+    WeatherDataAboutSomeCity& data;
 };
