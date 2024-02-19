@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../ConfigInfo/ConfigInfo.h"
+#include "nlohmann/json.hpp"
 
 struct WeatherDataAboutSomeCity {
     std::vector<std::string> forecast_days;
@@ -19,6 +20,7 @@ class APIInfo {
 public:
     void GetInfoFromAPINinja(const ImmutableParameters& user_immutable_parameters, size_t city_idx);
     void GetInfoFromOpenMeteoAPI(float latitude, float longitude);
+    void ConvertOpenMeteoData(nlohmann::json& weather_json);
     void GetAllForecasts(const ImmutableParameters& user_immutable_parameters);
     std::vector<WeatherDataAboutSomeCity>& GetWeatherCache();
 private:

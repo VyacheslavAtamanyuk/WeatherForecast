@@ -2,8 +2,11 @@
 #include <cpr/cpr.h>
 #include <nlohmann/json.hpp>
 #include <sstream>
+#include <iostream>
+#include <limits>
 
 const uint8_t kMaxForecastDays = 16;
+const float kNaN = std::numeric_limits<float>::quiet_NaN();
 
 void APIInfo::GetInfoFromAPINinja(const ImmutableParameters& user_immutable_parameters, size_t city_idx) {
     cpr::Response request = cpr::Get(cpr::Url("https://api.api-ninjas.com/v1/city"),
@@ -35,9 +38,30 @@ void APIInfo::GetInfoFromOpenMeteoAPI(float latitude, float longitude) {
                                                       {"daily", "temperature_2m_max"},
                                                       {"daily", "rain_sum"},
                                                       {"daily", "wind_speed_10m_max"}});
-    nlohmann::json data = nlohmann::json::parse(request.text);
-    weather_cache.push_back({data["daily"]["time"], data["daily"]["temperature_2m_max"], data["daily"]["temperature_2m_min"], data["daily"]["wind_speed_10m_max"], data["daily"]["rain_sum"]});
+    nlohmann::json weather_data = nlohmann::json::parse(request.text);
+    ConvertOpenMeteoData(weather_data);
 }
+
+void APIInfo::ConvertOpenMeteoData(nlohmann::json& weather_json) {
+    WeatherDataAboutSomeCity weather_at_this_day;
+
+    weather_at_this_day.forecast_days = weather_json["daily"]["time"];
+    for (uint8_t idx = 0; idx < kMaxForecastDays; ++idx) {
+        auto value_for_max_temp = weather_json["daily"]["temperature_2m_max"][idx];
+        value_for_max_temp.is_null() ? (weather_at_this_day.temperature_2m_max.push_back(kNaN)) : weather_at_this_day.temperature_2m_max.push_back(value_for_max_temp);
+
+        auto value_for_min_temp = weather_json["daily"]["temperature_2m_min"][idx];
+        value_for_min_temp.is_null() ? (weather_at_this_day.temperature_2m_min.push_back(kNaN)) : weather_at_this_day.temperature_2m_min.push_back(value_for_min_temp);
+
+        auto value_for_wind = weather_json["daily"]["wind_speed_10m_max"][idx];
+        value_for_wind.is_null() ? (weather_at_this_day.wind_speed_10m_max.push_back(kNaN)) : weather_at_this_day.wind_speed_10m_max.push_back(value_for_wind);
+
+        auto value_for_rain = weather_json["daily"]["rain_sum"][idx];
+        value_for_rain.is_null() ? (weather_at_this_day.rain_sum.push_back(kNaN)) : weather_at_this_day.rain_sum.push_back(value_for_rain);
+    }
+    weather_cache.push_back(weather_at_this_day);
+}
+
 
 void APIInfo::GetAllForecasts(const ImmutableParameters& user_immutable_parameters) {
     weather_cache.clear();

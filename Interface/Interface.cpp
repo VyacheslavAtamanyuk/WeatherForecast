@@ -92,7 +92,7 @@ void Interface::OpenUI() {
         if (current - start > std::chrono::seconds(user_immutable_parameters.GetFrequency())) {
             start = std::chrono::system_clock::now();
             weather_data.GetAllForecasts(user_immutable_parameters);
-            screen.PostEvent(Event::Custom); // event also will be sent on line 110, but I do it here for faster rendering
+            screen.PostEvent(Event::Custom); // event also will be sent on line 97, but I do it here for faster rendering
         }
         loop.RunOnce();
     }
