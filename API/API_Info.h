@@ -18,10 +18,11 @@ struct LocationDataAboutSomeCity {
 
 class APIInfo {
 public:
-    void GetInfoFromAPINinja(const ImmutableParameters& user_immutable_parameters, size_t city_idx);
-    void GetInfoFromOpenMeteoAPI(float latitude, float longitude);
+    int GetInfoFromAPINinja(const ImmutableParameters& user_immutable_parameters, size_t city_idx);
+    int GetInfoFromOpenMeteoAPI(float latitude, float longitude);
     void ConvertOpenMeteoData(nlohmann::json& weather_json);
-    void GetAllForecasts(const ImmutableParameters& user_immutable_parameters);
+    int GetAllForecasts(const ImmutableParameters& user_immutable_parameters, bool is_first_iteration);
+    bool IsHaveInternetConnection();
     std::vector<WeatherDataAboutSomeCity>& GetWeatherCache();
 private:
     std::vector<WeatherDataAboutSomeCity> weather_cache;

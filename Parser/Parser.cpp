@@ -22,6 +22,11 @@ bool ConfigParameters::UnpackConfig() {
         return false;
     }
 
+    if (!IsHaveInternetConnection()) {
+        std::cerr << "Check for internet connection";
+        return false;
+    }
+
     if (!IsCorrectAPI()) {
         std::cerr << "Your API-Key is incorrect";
         return false;
@@ -34,6 +39,14 @@ bool ConfigParameters::IsCorrectAPI() {
                                cpr::Header{{"X-Api-Key", api_key}});
     json check_the_correctness_of_api_key = json::parse(r.text);
     if (check_the_correctness_of_api_key.contains("error") && check_the_correctness_of_api_key["error"] == "Invalid API Key.") {
+        return false;
+    }
+    return true;
+}
+
+bool ConfigParameters::IsHaveInternetConnection() {
+    cpr::Response r = cpr::Get(cpr::Url("www.google.com"));
+    if (r.text.empty()) {
         return false;
     }
     return true;

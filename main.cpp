@@ -4,6 +4,7 @@
 #include "Parser/Parser.h"
 
 const uint8_t kStartCityIdx = 0;
+const bool is_it_first_iteration = true;
 
 int main() {
     ConfigParameters user_config;
@@ -15,9 +16,12 @@ int main() {
     MutableParameters user_mutable_parameters(kStartCityIdx, user_config.forecast_days);
 
     APIInfo weather_data;
-    weather_data.GetAllForecasts(user_immutable_parameters);
+    if (weather_data.GetAllForecasts(user_immutable_parameters, is_it_first_iteration) == 1) {
+        return 1;
+    }
 
-    Interface weather_display(user_immutable_parameters, user_mutable_parameters, weather_data);
-    weather_display.OpenUI();
+    InterfacePresenter weather_image(user_immutable_parameters, user_mutable_parameters, weather_data);
+    InterfaceController UI(weather_image);
+    UI.OpenUI();
     return 0;
 }

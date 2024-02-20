@@ -7,6 +7,7 @@
 struct ConfigParameters {
     bool UnpackConfig();
     bool IsCorrectAPI();
+    static bool IsHaveInternetConnection();
 
     std::vector<std::string> cities;
     size_t frequency;

@@ -8,18 +8,22 @@
 const uint8_t kMaxForecastDays = 16;
 const float kNaN = std::numeric_limits<float>::quiet_NaN();
 
-void APIInfo::GetInfoFromAPINinja(const ImmutableParameters& user_immutable_parameters, size_t city_idx) {
+int APIInfo::GetInfoFromAPINinja(const ImmutableParameters& user_immutable_parameters, size_t city_idx) {
     cpr::Response request = cpr::Get(cpr::Url("https://api.api-ninjas.com/v1/city"),
                                      cpr::Parameters{{"name", user_immutable_parameters.GetCityOnSomeIdx(city_idx)}},
                                      cpr::Header{{"X-Api-Key", user_immutable_parameters.GetAPIKey()}});
+    if (request.status_code != 200) {
+        return 1;
+    }
     std::string& required_string_for_json = request.text.erase(0,1); // remove extra square bracket
     required_string_for_json.pop_back(); // remove extra square bracket
 
     nlohmann::json api_ninja_info = nlohmann::json::parse(required_string_for_json);
     coordinates_cache.push_back({api_ninja_info["latitude"], api_ninja_info["longitude"]});
+    return 0;
 }
 
-void APIInfo::GetInfoFromOpenMeteoAPI(float latitude, float longitude) {
+int APIInfo::GetInfoFromOpenMeteoAPI(float latitude, float longitude) {
     std::ostringstream stream_for_latitude;
     stream_for_latitude << latitude;
     std::string string_for_latitude = stream_for_latitude.str();
@@ -38,8 +42,12 @@ void APIInfo::GetInfoFromOpenMeteoAPI(float latitude, float longitude) {
                                                       {"daily", "temperature_2m_max"},
                                                       {"daily", "rain_sum"},
                                                       {"daily", "wind_speed_10m_max"}});
+    if (request.status_code != 200) {
+        return 1;
+    }
     nlohmann::json weather_data = nlohmann::json::parse(request.text);
     ConvertOpenMeteoData(weather_data);
+    return 0;
 }
 
 void APIInfo::ConvertOpenMeteoData(nlohmann::json& weather_json) {
@@ -63,16 +71,51 @@ void APIInfo::ConvertOpenMeteoData(nlohmann::json& weather_json) {
 }
 
 
-void APIInfo::GetAllForecasts(const ImmutableParameters& user_immutable_parameters) {
+int APIInfo::GetAllForecasts(const ImmutableParameters& user_immutable_parameters, bool is_first_iteration) {
+    bool something_wrong = false;
+    std::vector<WeatherDataAboutSomeCity> reserve_copy = weather_cache;
     weather_cache.clear();
+
     for (size_t idx = 0; idx < user_immutable_parameters.GetCities().size(); ++idx) {
-        if (coordinates_cache.size() < user_immutable_parameters.GetCities().size()) {
-            GetInfoFromAPINinja(user_immutable_parameters, idx);
+        if (!IsHaveInternetConnection()) {
+            something_wrong = true;
+            break;
         }
-        GetInfoFromOpenMeteoAPI(coordinates_cache[idx].latitude, coordinates_cache[idx].longitude);
+
+        if (coordinates_cache.size() < user_immutable_parameters.GetCities().size()) {
+            if (GetInfoFromAPINinja(user_immutable_parameters, idx) == 1) {
+                something_wrong = true;
+                break;
+            }
+        }
+
+        if (GetInfoFromOpenMeteoAPI(coordinates_cache[idx].latitude, coordinates_cache[idx].longitude) == 1) {
+            something_wrong = true;
+            break;
+        }
+    }
+
+    if (something_wrong && !is_first_iteration) {
+        weather_cache = reserve_copy;
+        return 0;
+    } else if (something_wrong && is_first_iteration) {
+        std::cerr << "Something went wrong";
+        return 1;
+    } else if (!something_wrong && is_first_iteration) {
+        return 0;
+    } else {
+        return 0;
     }
 }
 
 std::vector<WeatherDataAboutSomeCity>& APIInfo::GetWeatherCache() {
     return weather_cache;
+}
+
+bool APIInfo::IsHaveInternetConnection() {
+    cpr::Response r = cpr::Get(cpr::Url("www.google.com"));
+    if (r.text.empty()) {
+        return false;
+    }
+    return true;
 }
