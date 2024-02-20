@@ -97,15 +97,11 @@ int APIInfo::GetAllForecasts(const ImmutableParameters& user_immutable_parameter
 
     if (something_wrong && !is_first_iteration) {
         weather_cache = reserve_copy;
-        return 0;
     } else if (something_wrong && is_first_iteration) {
         std::cerr << "Something went wrong";
         return 1;
-    } else if (!something_wrong && is_first_iteration) {
-        return 0;
-    } else {
-        return 0;
     }
+    return 0;
 }
 
 std::vector<WeatherDataAboutSomeCity>& APIInfo::GetWeatherCache() {
